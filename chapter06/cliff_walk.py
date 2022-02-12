@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.table import Table
 
-WORLD_HEIGHT = 4  # world height
-WORLD_WIDTH = 12  # world width
+WORLD_HEIGHT = 4
+WORLD_WIDTH = 12
 
 NORTH = 0
 SOUTH = 1
@@ -52,8 +52,7 @@ def policy_action(
         return np.random.choice(ACTIONS)
 
     values_ = q_values[state[0], state[1], :]
-    return np.random.choice(
-        [i for i, v_ in enumerate(values_) if v_ == np.max(values_)])
+    return np.random.choice(np.array(ACTIONS)[values_ == np.max(values_)])
 
 
 def sarsa(

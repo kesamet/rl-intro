@@ -25,7 +25,7 @@ def get_best_action(values: dict) -> str:
     return np.random.choice(best_actions)
 
 
-def choose_action(
+def policy_action(
     q_values: dict,
     state: str,
     epsilon: float,
@@ -70,7 +70,7 @@ def q_learning(
 
         left_from_A = 0
         while state != GOAL:
-            action = choose_action(q_values, state, epsilon)
+            action = policy_action(q_values, state, epsilon)
 
             if state == "A" and action == "left":
                 left_from_A += 1
@@ -116,7 +116,7 @@ def double_q_learning(
         left_from_A = 0
         while state != GOAL:
             q_values_ = _sum_q(q1, q2)
-            action = choose_action(q_values_, state, epsilon)
+            action = policy_action(q_values_, state, epsilon)
 
             if state == "A" and action == "left":
                 left_from_A += 1

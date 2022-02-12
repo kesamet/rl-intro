@@ -178,10 +178,10 @@ def figure_2_5():
     pct_optimal_action, _ = simulate(runs, time_steps, bandits)
 
     labels = [
-        r"$\alpha = 0.1$, with baseline",
-        r"$\alpha = 0.1$, without baseline",
-        r"$\alpha = 0.4$, with baseline",
-        r"$\alpha = 0.4$, without baseline",
+        "$\\alpha = 0.1$, with baseline",
+        "$\\alpha = 0.1$, without baseline",
+        "$\\alpha = 0.4$, with baseline",
+        "$\\alpha = 0.4$, without baseline",
     ]
     for i in range(len(bandits)):
         plt.plot(pct_optimal_action[i], label=labels[i])
