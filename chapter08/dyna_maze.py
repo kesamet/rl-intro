@@ -55,16 +55,27 @@ def policy_action(
     return np.random.choice(np.array(ACTIONS)[values_ == np.max(values_)])
 
 
-# Trivial model for planning in Dyna-Q
-class TrivialModel:
+class Agent:
     def __init__(self):
         self.model = defaultdict(defaultdict)
 
-    # feed the model with previous experience
-    def feed(self, state, action, next_state, reward):
+    def update(self, state, action, next_state, reward):
+        """Update the model with previous experience."""
+        raise NotImplementedError
+
+    def sample(self):
+        """Randomly sample from previous experience."""
+        raise NotImplementedError
+
+
+# Model for planning in Dyna-Q
+class DynaQAgent(Agent):
+    def __init__(self):
+        super().__init__()
+
+    def update(self, state, action, next_state, reward):
         self.model[tuple(state)][action] = [reward, list(next_state)]
 
-    # randomly sample from previous experience
     def sample(self):
         seen_states = list(self.model.keys())
         i = np.random.choice(range(len(seen_states)))
@@ -80,7 +91,7 @@ class TrivialModel:
 
 def dyna_q(
     q_values: np.ndarray,
-    model: TrivialModel,
+    model: Agent,
     planning_step: int,
     max_t: float = float("inf"),
     gamma: float = 0.95,
@@ -89,7 +100,7 @@ def dyna_q(
 ):
     t = 0
     state = START
-    while t <= max_t or state != GOAL:
+    while t <= max_t and state != GOAL:
         action = policy_action(q_values, state, epsilon)
         next_state, reward = step(state, action)
 
@@ -98,7 +109,7 @@ def dyna_q(
         q_values[state[0], state[1], action] += alpha * (
             reward + gamma * target - q_values[state[0], state[1], action]
         )
-        model.feed(state, action, next_state, reward)
+        model.update(state, action, next_state, reward)
 
         for _ in range(planning_step):
             state_, action_, next_state_, reward_ = model.sample()
@@ -110,21 +121,21 @@ def dyna_q(
         state = next_state
         t += 1
     
-    return q_values, model, t
+    return t
 
 
 def figure_8_2():
     runs = 10
-    episodes = 10
-    planning_steps = [5] #[0, 5, 50]
+    episodes = 50
+    planning_steps = [0, 5, 50]
     steps = np.zeros((len(planning_steps), episodes))
 
     for run in range(runs):
+        print(f"run: {run}")
         for i, planning_step in enumerate(planning_steps):
             q_values = np.zeros((WORLD_HEIGHT, WORLD_WIDTH, len(ACTIONS)))
-            model = TrivialModel()
+            model = DynaQAgent()
             for j in range(episodes):
-                print(f"run: {run}, planning step: {planning_step}, episode: {j}")
                 steps[i, j] += dyna_q(q_values, model, planning_step)
 
     # averaging over runs
