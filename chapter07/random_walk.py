@@ -151,10 +151,10 @@ def figure_7_2():
     plt.ylabel("RMS error")
     plt.ylim([0.25, 0.55])
     plt.legend()
-    plt.show()      
+    plt.show()
 
 
-def test_sarsa():
+def _test_sarsa():
     alpha = 0.5
     n = 2
     episodes = 10

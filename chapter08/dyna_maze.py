@@ -1,3 +1,4 @@
+import heapq
 from collections import defaultdict
 from typing import List, Tuple
 
@@ -89,6 +90,32 @@ class DynaQAgent(Agent):
         return list(state), action, list(next_state), reward
 
 
+# Model for planning in Dyna-Q+
+class DynaQPlusAgent(Agent):
+    def __init__(self, kappa=1e-4):
+        super().__init__()
+        self.kappa = kappa
+        self.tau = 0  # time tracker
+
+    def update(self, state, action, next_state, reward):
+        self.tau += 1
+
+        self.model[tuple(state)][action] = [reward, list(next_state), self.tau]
+
+    def sample(self):
+        seen_states = list(self.model.keys())
+        i = np.random.choice(range(len(seen_states)))
+        state = seen_states[i]
+
+        actions = list(self.model[state].keys())
+        j = np.random.choice(range(len(actions)))
+        action = actions[j]
+
+        reward, next_state, tau = self.model[state][action]
+        reward += self.kappa * np.sqrt(self.tau - tau)  # adjust reward
+        return list(state), action, list(next_state), reward
+
+
 def dyna_q(
     q_values: np.ndarray,
     model: Agent,
@@ -122,6 +149,31 @@ def dyna_q(
         t += 1
     
     return t
+
+
+def prioritized_sweeping(
+    q_values: np.ndarray,
+    model: Agent,
+    planning_step: int,
+    max_t: float = float("inf"),
+    gamma: float = 0.95,
+    alpha: float = 0.1,
+    epsilon: float = 0.1,
+):
+    t = 0
+    state = START
+    while t <= max_t and state != GOAL:
+        action = policy_action(q_values, state, epsilon)
+        next_state, reward = step(state, action)
+        model.update(state, action, next_state, reward)
+        p = np.abs(
+            reward + gamma * np.max(q_values[next_state[0], next_state[1], :])
+            - q_values[state[0], state[1], action]
+        )
+        if p > theta:
+            pqueue.append((state))
+
+
 
 
 def figure_8_2():
