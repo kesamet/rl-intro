@@ -1,3 +1,5 @@
+import itertools
+import time
 from typing import Tuple
 
 import numpy as np
@@ -21,10 +23,53 @@ TRUE_VALUES = np.linspace(-1, 1, WORLD_LENGTH)
 TRUE_VALUES[0] = TRUE_VALUES[-1] = 0
 
 
+def dynamic_program(inplace: bool = True, gamma: float = 1., theta: float = 1e-2) -> np.ndarray:
+    """4.1 Iterative policy evaluation (DP)."""
+    def _step(state: int, step: int) -> Tuple[int]:
+        """Get reward and next state given current state and action."""
+        next_state = max(min(state + step, WORLD_LENGTH - 1), 0)            
+        if next_state == WORLD_LENGTH - 1:
+            reward = 1
+        elif next_state == 0:
+            reward = -1
+        else:
+            reward = 0
+        return next_state, reward
+
+    # Using guess in order to converge faster
+    # state_values = np.zeros(WORLD_LENGTH)
+    state_values = np.linspace(-1, 1, WORLD_LENGTH)
+    state_values[0] = 0
+    state_values[-1] = 0
+    prob = 0.5 / STEP_RANGE
+    iters = 0
+    while True:
+        old_state_values = state_values.copy()
+
+        for i in STATES:
+            _v = 0
+            for sgn, size in itertools.product(ACTIONS, np.arange(1, STEP_RANGE + 1)):
+                next_i, reward = _step(i, sgn * size)
+                if inplace:
+                    # Asynchronous/inplace
+                    _v += prob * (reward + gamma * state_values[next_i])
+                else:
+                    # Synchronous
+                    _v += prob * (reward + gamma * old_state_values[next_i])
+            state_values[i] = _v
+
+        if np.abs(state_values - old_state_values).max() < theta:
+            break
+
+        iters += 1
+
+    print(f"  {iters} iterations")
+    return state_values
+
+
 def step(state: int, action: int) -> Tuple[int]:
     """Get reward and next state given current state and action."""
-    step = action * np.random.randint(1, STEP_RANGE + 1)
-    next_state = max(min(state + step, WORLD_LENGTH - 1), 0)
+    next_state = max(min(state + action, WORLD_LENGTH - 1), 0)
     if next_state == WORLD_LENGTH - 1:
         reward = 1
     elif next_state == 0:
@@ -37,23 +82,23 @@ def step(state: int, action: int) -> Tuple[int]:
 def choose_action() -> int:
     """Choose an action randomly."""
     if np.random.binomial(1, PROB_LEFT) == 1:
-        return ACTION_LEFT
-    return ACTION_RIGHT
+        sgn = ACTION_LEFT
+    else:
+        sgn = ACTION_RIGHT
+    return sgn * np.random.randint(1, STEP_RANGE + 1)
 
 
 class ValueFunction:
-    def __init__(self, n_states: int, num_of_groups: int):
-    # @num_of_groups: # of aggregations
+    def __init__(self, n_states: int, n_groups: int):
         self.n_states = n_states
-        self.num_of_groups = num_of_groups
-        self.group_size = n_states // num_of_groups
-        self.thetas = np.zeros(num_of_groups)
+        self.n_groups = n_groups  # num of aggregations
+        self.group_size = n_states // n_groups
+        self.thetas = np.zeros(n_groups)
 
     def value(self, state):
         """Get state value."""
         if state in GOALS:
             return 0
-
         return self.thetas[(state - 1) // self.group_size]
 
     def update(self, delta, state):
@@ -61,14 +106,15 @@ class ValueFunction:
         self.thetas[(state - 1) // self.group_size] += delta
 
 
-def gradient_montecarlo(value_function: np.ndarray, distribution: int, alpha: float, gamma: float = 1.) -> None:
+def gradient_montecarlo(
+    value_function: np.ndarray, distribution: int, alpha: float, gamma: float = 1.
+) -> None:
     # TODO: incorporate gamma
     state = START
 
     # Track states, rewards and time
     trajectory = [state]
     # rewards = [0]
-
     while True:
         action = choose_action()
         state, reward = step(state, action)
@@ -87,35 +133,43 @@ def gradient_montecarlo(value_function: np.ndarray, distribution: int, alpha: fl
 
 
 def figure_9_1():
+    print("Compute state values using DP")
+    start = time.time()
+    true_values = dynamic_program()
+    print(f"  Time taken = {time.time() - start:.0f} secs")
+
     episodes = int(1e5)
     alpha = 2e-5
+    n_groups = 10  # 10 aggregations
 
-    # we have 10 aggregations in this example, each has 100 states
-    value_function = ValueFunction(WORLD_LENGTH - len(GOALS), 10)
+    print("Compute state values using gradient Monte-Carlo")
+    start = time.time()
+    value_function = ValueFunction(WORLD_LENGTH - len(GOALS), n_groups)
     distribution = np.zeros(WORLD_LENGTH)
-    for _ in range(episodes):
-        gradient_montecarlo(value_function, alpha, distribution)
+    for ep in range(episodes):
+        if ep % 10000 == 0:
+            print(f"  Episode {ep}")
+        gradient_montecarlo(value_function, distribution, alpha)
 
     distribution /= np.sum(distribution)
     state_values = [value_function.value(i) for i in STATES]
+    print(f"  Time taken = {time.time() - start:.0f} secs")
 
-    plt.figure(figsize=(10, 20))
+    plt.figure(figsize=(8, 10))
 
     plt.subplot(2, 1, 1)
-    plt.plot(STATES, state_values, label='Approximate MC value')
-    plt.plot(STATES, true_value[1: -1], label='True value')
-    plt.xlabel('State')
-    plt.ylabel('Value')
+    plt.plot(STATES, state_values, label="Approximate MC value")
+    plt.plot(STATES, true_values[1: -1], label="True value")
+    plt.xlabel("State")
+    plt.ylabel("Value")
     plt.legend()
 
     plt.subplot(2, 1, 2)
-    plt.plot(STATES, distribution[1: -1], label='State distribution')
-    plt.xlabel('State')
-    plt.ylabel('Distribution')
+    plt.plot(STATES, distribution[1: -1], label="State distribution")
+    plt.xlabel("State")
+    plt.ylabel("Distribution")
     plt.legend()
-
-    plt.savefig('../images/figure_9_1.png')
-    plt.close()
+    plt.show()
 
 
 # def policy_action(

@@ -146,12 +146,8 @@ def figure_3_2():
         value = new_value
 
 
-def figure_3_2_linear_system():
-    """
-    Here we solve the linear system of equations to find the exact solution.
-    We do this by filling the coefficients for each of the states with their
-    respective right side constant.
-    """
+def figure_3_2_exact():
+    """Using linear system of equations to find the exact solution."""
     A = -1 * np.eye(WORLD_SIZE * WORLD_SIZE)
     b = np.zeros(WORLD_SIZE * WORLD_SIZE)
     for i in range(WORLD_SIZE):
@@ -192,6 +188,6 @@ def figure_3_5():
 
 
 if __name__ == "__main__":
-    figure_3_2_linear_system()
+    figure_3_2_exact()
     figure_3_2()
     figure_3_5()

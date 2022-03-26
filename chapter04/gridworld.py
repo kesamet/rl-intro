@@ -40,7 +40,7 @@ def out_of_grid(state: List[int]) -> bool:
     )
 
 
-def step(state: list[int], action) -> Tuple[List[int], float]:
+def step(state: List[int], action) -> Tuple[List[int], float]:
     if is_terminal(state):
         return state, 0  # state, reward
     
@@ -52,7 +52,7 @@ def step(state: list[int], action) -> Tuple[List[int], float]:
 
 
 def compute_state_values(inplace: bool = True, gamma: float = 1., theta: float = 1e-4) -> np.ndarray:
-    """4.1 Iterative policy evaluation."""
+    """4.1 Iterative policy evaluation (DP)."""
     state_values = np.zeros((WORLD_SIZE, WORLD_SIZE))
     iters = 0
     while True:
@@ -64,8 +64,10 @@ def compute_state_values(inplace: bool = True, gamma: float = 1., theta: float =
                 for a in ACTIONS.values():
                     (next_i, next_j), reward = step([i, j], a["vec"])
                     if inplace:
+                        # Asynchronous/inplace
                         _v += a["prob"] * (reward + gamma * state_values[next_i, next_j])
                     else:
+                        # Synchronous
                         _v += a["prob"] * (reward + gamma * old_state_values[next_i, next_j])
                 state_values[i, j] = _v
 
@@ -78,7 +80,7 @@ def compute_state_values(inplace: bool = True, gamma: float = 1., theta: float =
     return state_values
 
 
-def draw_table(arr):
+def draw_table(arr: np.ndarray) -> None:
     _, ax = plt.subplots()
     ax.set_axis_off()
     tb = Table(ax, bbox=[0, 0, 1, 1])
@@ -90,23 +92,21 @@ def draw_table(arr):
     for (i, j), val in np.ndenumerate(arr):
         tb.add_cell(
             i, j, width, height, text=val,
-            loc='center', facecolor='white')
+            loc="center", facecolor="white")
 
     # Row and column labels...
     for i in range(len(arr)):
         tb.add_cell(
-            i, -1, width, height, text=i+1, loc='right',
-            edgecolor='none', facecolor='none')
+            i, -1, width, height, text=i+1, loc="right",
+            edgecolor="none", facecolor="none")
         tb.add_cell(
-            -1, i, width, height/2, text=i+1, loc='center',
-            edgecolor='none', facecolor='none')
+            -1, i, width, height/2, text=i+1, loc="center",
+            edgecolor="none", facecolor="none")
     ax.add_table(tb)
     plt.show()
 
 
 def figure_4_1():
-    # While the author suggests using in-place iterative policy evaluation,
-    # Figure 4.1 actually uses out-of-place version.
     print("In-place:")
     state_values = compute_state_values(inplace=True)
     draw_table(np.round(state_values, decimals=2))
