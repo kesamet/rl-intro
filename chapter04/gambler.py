@@ -11,7 +11,7 @@ STATES = np.arange(GOAL + 1)
 def value_iteration(head_prob: float = 0.4, theta: float = 1e-8) -> tuple:
     """4.4 Value iteration."""
     state_values = np.zeros(len(STATES))
-    state_values[GOAL] = 1.
+    state_values[GOAL] = 1.0
 
     while True:
         old_state_values = state_values.copy()
@@ -43,9 +43,7 @@ def value_iteration(head_prob: float = 0.4, theta: float = 1e-8) -> tuple:
                     + (1 - head_prob) * state_values[state - action]
                 )
             else:
-                rets.append(
-                    head_prob + (1 - head_prob) * state_values[state - action]
-                )
+                rets.append(head_prob + (1 - head_prob) * state_values[state - action])
 
         policy[state] = actions[np.argmax(rets)]
 

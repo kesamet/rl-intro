@@ -23,7 +23,7 @@ ACTIONS = [
     np.array([0, 1]),
     np.array([1, 0]),
 ]
-ACTIONS_FIGS = [ "←", "↑", "→", "↓"]
+ACTIONS_FIGS = ["←", "↑", "→", "↓"]
 
 ACTION_PROB = 0.25
 GAMMA = 0.9
@@ -65,19 +65,32 @@ def draw_table(arr):
             text += " (B)"
         if [i, j] == B_PRIME_POS:
             text += " (B')"
-        
-        tb.add_cell(
-            i, j, width, height, text=text, loc="center", facecolor="white")
-        
+
+        tb.add_cell(i, j, width, height, text=text, loc="center", facecolor="white")
+
     # Row and column labels
     for i in range(nrows):
         tb.add_cell(
-            i, -1, width, height, text=i+1, loc="right", 
-            edgecolor="none", facecolor="none")
+            i,
+            -1,
+            width,
+            height,
+            text=i + 1,
+            loc="right",
+            edgecolor="none",
+            facecolor="none",
+        )
     for j in range(ncols):
         tb.add_cell(
-            -1, j, width, height/2, text=j+1, loc="center",
-            edgecolor="none", facecolor="none")
+            -1,
+            j,
+            width,
+            height / 2,
+            text=j + 1,
+            loc="center",
+            edgecolor="none",
+            facecolor="none",
+        )
 
     ax.add_table(tb)
     plt.show()
@@ -110,19 +123,32 @@ def draw_policy(optimal_values):
             text += " (B)"
         if [i, j] == B_PRIME_POS:
             text += " (B')"
-        
-        tb.add_cell(
-            i, j, width, height, text=text, loc="center", facecolor="white")
+
+        tb.add_cell(i, j, width, height, text=text, loc="center", facecolor="white")
 
     # Row and column labels
     for i in range(nrows):
         tb.add_cell(
-            i, -1, width, height, text=i+1, loc="right", 
-            edgecolor="none", facecolor="none")
+            i,
+            -1,
+            width,
+            height,
+            text=i + 1,
+            loc="right",
+            edgecolor="none",
+            facecolor="none",
+        )
     for j in range(ncols):
         tb.add_cell(
-            -1, j, width, height/2, text=j+1, loc="center",
-            edgecolor="none", facecolor="none")
+            -1,
+            j,
+            width,
+            height / 2,
+            text=j + 1,
+            loc="center",
+            edgecolor="none",
+            facecolor="none",
+        )
     ax.add_table(tb)
     plt.show()
 
@@ -137,7 +163,9 @@ def figure_3_2():
                 for action in ACTIONS:
                     (next_i, next_j), reward = step([i, j], action)
                     # bellman equation
-                    new_value[i, j] += ACTION_PROB * (reward + GAMMA * value[next_i, next_j])
+                    new_value[i, j] += ACTION_PROB * (
+                        reward + GAMMA * value[next_i, next_j]
+                    )
 
         if np.sum(np.abs(value - new_value)) < 1e-4:
             draw_table(new_value)

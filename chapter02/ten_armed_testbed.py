@@ -7,7 +7,11 @@ import matplotlib.pyplot as plt
 
 class Bandit:
     def __init__(
-        self, k: int = 10, epsilon: float = 0., q_initial:float = 0., step_size: float = None,
+        self,
+        k: int = 10,
+        epsilon: float = 0.0,
+        q_initial: float = 0.0,
+        step_size: float = None,
         true_reward: float = 0,
         update_method: str = "constant_step",  # constant_step, sample_averages
         choose_method: str = None,  # Non=greedy, ucb, gradient
@@ -48,9 +52,8 @@ class Bandit:
             return np.random.choice(self.actions)
 
         if self.choose_method == "ucb":
-            q_ = (
-                self.q
-                + self.ucb_coef * np.sqrt(np.log(self.time + 1) / (self.action_count + 1e-5))
+            q_ = self.q + self.ucb_coef * np.sqrt(
+                np.log(self.time + 1) / (self.action_count + 1e-5)
             )
         else:
             q_ = self.q
@@ -62,8 +65,8 @@ class Bandit:
         self.time += 1
         reward = self.q_true[action] + np.random.randn()
         self.action_count[action] += 1
-        
-        if self.update_method  == "sample_averages":
+
+        if self.update_method == "sample_averages":
             # update estimation using sample averages
             self.q[action] += (reward - self.q[action]) / self.action_count[action]
         elif self.update_method == "constant_step":
@@ -142,7 +145,10 @@ def figure_2_3():
     pct_optimal_action, _ = simulate(runs, time_steps, bandits)
 
     plt.plot(pct_optimal_action[0], label="Optimistic, greedy\n$Q_1=5, \epsilon = 0$")
-    plt.plot(pct_optimal_action[1], label="Realistic, $\epsilon$-greedy\n$Q_1=5, \epsilon = 0.1$")
+    plt.plot(
+        pct_optimal_action[1],
+        label="Realistic, $\epsilon$-greedy\n$Q_1=5, \epsilon = 0.1$",
+    )
     plt.xlabel("Steps")
     plt.ylabel("% Optimal action")
     plt.legend()
@@ -170,10 +176,30 @@ def figure_2_5():
     runs = 2000
     time_steps = 1000
     bandits = [
-        Bandit(step_size=0.1, true_reward=4, choose_method="gradient", gradient_baseline=True),
-        Bandit(step_size=0.1, true_reward=4, choose_method="gradient", gradient_baseline=False),
-        Bandit(step_size=0.4, true_reward=4, choose_method="gradient", gradient_baseline=True),
-        Bandit(step_size=0.4, true_reward=4, choose_method="gradient", gradient_baseline=False),
+        Bandit(
+            step_size=0.1,
+            true_reward=4,
+            choose_method="gradient",
+            gradient_baseline=True,
+        ),
+        Bandit(
+            step_size=0.1,
+            true_reward=4,
+            choose_method="gradient",
+            gradient_baseline=False,
+        ),
+        Bandit(
+            step_size=0.4,
+            true_reward=4,
+            choose_method="gradient",
+            gradient_baseline=True,
+        ),
+        Bandit(
+            step_size=0.4,
+            true_reward=4,
+            choose_method="gradient",
+            gradient_baseline=False,
+        ),
     ]
     pct_optimal_action, _ = simulate(runs, time_steps, bandits)
 

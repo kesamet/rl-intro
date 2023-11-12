@@ -56,4 +56,4 @@ def play():
             assert player_score == 22  # last card must be ace
             player_score -= 10
         else:
-            player_usable_ace |= (card == 11)
+            player_usable_ace |= card == 11

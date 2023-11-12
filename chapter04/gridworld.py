@@ -27,23 +27,21 @@ ACTIONS = {
 
 
 def is_terminal(state: List[int]) -> bool:
-    return (
-        (state[0] == 0 and state[1] == 0) or
-        (state[0] == WORLD_SIZE - 1 and state[1] == WORLD_SIZE - 1)
+    return (state[0] == 0 and state[1] == 0) or (
+        state[0] == WORLD_SIZE - 1 and state[1] == WORLD_SIZE - 1
     )
 
 
 def out_of_grid(state: List[int]) -> bool:
     return (
-        state[0] < 0 or state[0] >= WORLD_SIZE or
-        state[1] < 0 or state[1] >= WORLD_SIZE
+        state[0] < 0 or state[0] >= WORLD_SIZE or state[1] < 0 or state[1] >= WORLD_SIZE
     )
 
 
 def step(state: List[int], action) -> Tuple[List[int], float]:
     if is_terminal(state):
         return state, 0  # state, reward
-    
+
     next_state = (np.array(state) + action).tolist()
     if out_of_grid(next_state):
         next_state = state
@@ -51,7 +49,9 @@ def step(state: List[int], action) -> Tuple[List[int], float]:
     return next_state, -1  # state, reward
 
 
-def compute_state_values(inplace: bool = True, gamma: float = 1., theta: float = 1e-4) -> np.ndarray:
+def compute_state_values(
+    inplace: bool = True, gamma: float = 1.0, theta: float = 1e-4
+) -> np.ndarray:
     """4.1 Iterative policy evaluation (DP)."""
     state_values = np.zeros((WORLD_SIZE, WORLD_SIZE))
     iters = 0
@@ -65,10 +65,14 @@ def compute_state_values(inplace: bool = True, gamma: float = 1., theta: float =
                     (next_i, next_j), reward = step([i, j], a["vec"])
                     if inplace:
                         # Asynchronous/inplace
-                        _v += a["prob"] * (reward + gamma * state_values[next_i, next_j])
+                        _v += a["prob"] * (
+                            reward + gamma * state_values[next_i, next_j]
+                        )
                     else:
                         # Synchronous
-                        _v += a["prob"] * (reward + gamma * old_state_values[next_i, next_j])
+                        _v += a["prob"] * (
+                            reward + gamma * old_state_values[next_i, next_j]
+                        )
                 state_values[i, j] = _v
 
         if np.abs(state_values - old_state_values).max() < theta:
@@ -90,18 +94,30 @@ def draw_table(arr: np.ndarray) -> None:
 
     # Add cells
     for (i, j), val in np.ndenumerate(arr):
-        tb.add_cell(
-            i, j, width, height, text=val,
-            loc="center", facecolor="white")
+        tb.add_cell(i, j, width, height, text=val, loc="center", facecolor="white")
 
     # Row and column labels...
     for i in range(len(arr)):
         tb.add_cell(
-            i, -1, width, height, text=i+1, loc="right",
-            edgecolor="none", facecolor="none")
+            i,
+            -1,
+            width,
+            height,
+            text=i + 1,
+            loc="right",
+            edgecolor="none",
+            facecolor="none",
+        )
         tb.add_cell(
-            -1, i, width, height/2, text=i+1, loc="center",
-            edgecolor="none", facecolor="none")
+            -1,
+            i,
+            width,
+            height / 2,
+            text=i + 1,
+            loc="center",
+            edgecolor="none",
+            facecolor="none",
+        )
     ax.add_table(tb)
     plt.show()
 

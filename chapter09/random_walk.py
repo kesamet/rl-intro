@@ -14,18 +14,21 @@ N_STATES = len(STATES)
 PROB_LEFT = 0.5
 ACTION_LEFT = -1
 ACTION_RIGHT = 1
-ACTIONS_DIR  = [ACTION_LEFT, ACTION_RIGHT]
+ACTIONS_DIR = [ACTION_LEFT, ACTION_RIGHT]
 
 # maximum stride for an action direction
 STEP_RANGE = 100
 
 
-def dynamic_program(inplace: bool = True, gamma: float = 1., theta: float = 1e-2) -> np.ndarray:
+def dynamic_program(
+    inplace: bool = True, gamma: float = 1.0, theta: float = 1e-2
+) -> np.ndarray:
     """4.1 Iterative policy evaluation (DP)."""
     print("Compute true state values using DP")
+
     def _step(state: int, step: int) -> Tuple[int]:
         """Get reward and next state given current state and action."""
-        next_state = max(min(state + step, WORLD_LENGTH - 1), 0)            
+        next_state = max(min(state + step, WORLD_LENGTH - 1), 0)
         if next_state == WORLD_LENGTH - 1:
             reward = 1
         elif next_state == 0:
@@ -46,7 +49,9 @@ def dynamic_program(inplace: bool = True, gamma: float = 1., theta: float = 1e-2
 
         for i in STATES:
             _v = 0
-            for sgn, size in itertools.product(ACTIONS_DIR, np.arange(1, STEP_RANGE + 1)):
+            for sgn, size in itertools.product(
+                ACTIONS_DIR, np.arange(1, STEP_RANGE + 1)
+            ):
                 next_i, reward = _step(i, sgn * size)
                 if inplace:
                     # Asynchronous/inplace
@@ -110,7 +115,7 @@ def choose_action() -> int:
 def gradient_montecarlo(
     value_function: np.ndarray,
     alpha: float,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     distribution: np.ndarray = None,
 ) -> None:
     # TODO: incorporate gamma
@@ -141,7 +146,7 @@ def semi_gradient_td(
     value_function: np.ndarray,
     alpha: float,
     n: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
 ) -> None:
     state = START
 
@@ -164,12 +169,14 @@ def semi_gradient_td(
         # n-step TD update
         tau = t - n + 1
         if tau >= 0:
-            G = sum([
-                gamma ** (i - tau - 1) * rewards[i]
-                for i in range(tau + 1, min(tau + n, T) + 1)
-            ])
+            G = sum(
+                [
+                    gamma ** (i - tau - 1) * rewards[i]
+                    for i in range(tau + 1, min(tau + n, T) + 1)
+                ]
+            )
             if tau + n < T:
-                G += gamma ** n * value_function.value(states[tau + n])
+                G += gamma**n * value_function.value(states[tau + n])
             state_tau = states[tau]
             if state_tau not in GOALS:
                 delta = alpha * (G - value_function.value(state_tau))
@@ -206,7 +213,7 @@ def figure_9_1():
     plt.show()
 
     distribution /= np.sum(distribution)
-    plt.plot(STATES, distribution[1: -1], label="State distribution")
+    plt.plot(STATES, distribution[1:-1], label="State distribution")
     plt.xlabel("State")
     plt.ylabel("Distribution")
     plt.legend()
@@ -255,9 +262,11 @@ def figure_9_2b():
                 for _ in range(episodes):
                     semi_gradient_td(value_function, alpha, n)
                     state_values = np.asarray([value_function.value(i) for i in STATES])
-                    errors[n_idx, alpha_idx] += np.sqrt(np.mean((state_values - TRUE_VALUES) ** 2))
-    
-    errors /= (episodes * runs)  # average across episodes and runs
+                    errors[n_idx, alpha_idx] += np.sqrt(
+                        np.mean((state_values - TRUE_VALUES) ** 2)
+                    )
+
+    errors /= episodes * runs  # average across episodes and runs
 
     for i in range(len(ns)):
         plt.plot(alphas, errors[i, :], label=f"n = {ns[i]}")
@@ -271,15 +280,18 @@ def figure_9_2b():
 POLYNOMIAL_BASES = 0
 FOURIER_BASES = 1
 
+
 class BasesValueFunction:
     def __init__(self, btype: int, order: int, n_states: int):
         self.btype = btype  # type of bases
         self.order = order  # num of bases
         self.n_states = n_states
         if btype == POLYNOMIAL_BASES:
-            self.bases = [lambda s, i = i: pow(s, i) for i in range(order + 1)]
+            self.bases = [lambda s, i=i: pow(s, i) for i in range(order + 1)]
         elif btype == FOURIER_BASES:
-            self.bases = [lambda s, i = i: np.cos(i * np.pi * s) for i in range(order + 1)]
+            self.bases = [
+                lambda s, i=i: np.cos(i * np.pi * s) for i in range(order + 1)
+            ]
         else:
             raise NotImplementedError
         self.weights = np.zeros(order + 1)
@@ -313,9 +325,12 @@ def figure_9_5():
                 value_function = BasesValueFunction(btype, order, N_STATES)
                 for ep in range(episodes):
                     gradient_montecarlo(value_function, alpha)
-                    state_values = np.asarray([value_function.value(state) for state in STATES])
+                    state_values = np.asarray(
+                        [value_function.value(state) for state in STATES]
+                    )
                     errors[btype_idx, order_idx, ep] += np.sqrt(
-                        np.mean((TRUE_VALUES - state_values) ** 2))
+                        np.mean((TRUE_VALUES - state_values) ** 2)
+                    )
 
     errors /= runs  # average over runs
 

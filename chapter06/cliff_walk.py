@@ -29,15 +29,14 @@ def step(state: list[int], action: np.ndarray) -> Tuple[List[int], float]:
         new_state = [row, max(col - 1, 0)]
     elif action == EAST:
         new_state = [row, min(col + 1, WORLD_WIDTH - 1)]
-    reward = -1.
+    reward = -1.0
 
     # Cliff
-    if (
-        (action == SOUTH and row == 2 and 1 <= col <= 10) or
-        (action == EAST and state == START)
+    if (action == SOUTH and row == 2 and 1 <= col <= 10) or (
+        action == EAST and state == START
     ):
         new_state = START
-        reward = -100.
+        reward = -100.0
 
     return new_state, reward
 
@@ -57,7 +56,7 @@ def policy_action(
 
 def sarsa(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, list]:
@@ -83,14 +82,14 @@ def sarsa(
             state = next_state
             action = next_action
             total_reward += reward
-        
+
         all_rewards.append(total_reward)
     return q_values, all_rewards
 
 
 def expected_sarsa(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, list]:
@@ -109,7 +108,9 @@ def expected_sarsa(
 
             v = q_values[next_state[0], next_state[1], :]
             n1 = np.sum(v == np.max(v))
-            wgts = np.where(v == np.max(v), (1 - epsilon) / n1, 0) + epsilon / len(ACTIONS)
+            wgts = np.where(v == np.max(v), (1 - epsilon) / n1, 0) + epsilon / len(
+                ACTIONS
+            )
             target = wgts.dot(v)
 
             # Update
@@ -119,14 +120,14 @@ def expected_sarsa(
             state = next_state
             action = next_action
             total_reward += reward
-        
+
         all_rewards.append(total_reward)
     return q_values, all_rewards
 
 
 def q_learning(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, list]:
@@ -150,7 +151,7 @@ def q_learning(
             )
             state = next_state
             total_reward += reward
-        
+
         all_rewards.append(total_reward)
     return q_values, all_rewards
 
@@ -182,9 +183,8 @@ def draw_optimal_policy(q_values, title=None):
                     val = "R"
 
             row.append(val)
-            tb.add_cell(
-                i, j, width, height, text=val, loc="center", facecolor="white")
-    
+            tb.add_cell(i, j, width, height, text=val, loc="center", facecolor="white")
+
         optimal_policy.append(row)
 
     ax.add_table(tb)

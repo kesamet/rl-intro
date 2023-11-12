@@ -31,7 +31,9 @@ def step(state: int, action: int) -> Tuple[int]:
     return next_state, reward
 
 
-def temporal_difference(state_values: np.ndarray, alpha: float = 0.1, gamma: float = 1.) -> None:
+def temporal_difference(
+    state_values: np.ndarray, alpha: float = 0.1, gamma: float = 1.0
+) -> None:
     """
     Policy is proceeding either left or right by one state on each step, with equal probability.
     """
@@ -41,7 +43,9 @@ def temporal_difference(state_values: np.ndarray, alpha: float = 0.1, gamma: flo
         next_state, reward = step(state, action)
 
         # TD update
-        state_values[state] += alpha * (reward + gamma * state_values[next_state] - state_values[state])
+        state_values[state] += alpha * (
+            reward + gamma * state_values[next_state] - state_values[state]
+        )
 
         if next_state in GOALS:
             break
@@ -112,7 +116,11 @@ def example_6_2():
             total_errors += np.asarray(errors)
         total_errors /= runs
 
-        plt.plot(total_errors, linestyle=linestyle, label=f"{method}, $\\alpha = {alpha:.2f}$")
+        plt.plot(
+            total_errors,
+            linestyle=linestyle,
+            label=f"{method}, $\\alpha = {alpha:.2f}$",
+        )
     plt.xlabel("Walks/Episodes")
     plt.ylabel("Empirical RMS error, averaged over states")
     plt.legend()

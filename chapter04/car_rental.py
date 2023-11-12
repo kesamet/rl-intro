@@ -29,12 +29,18 @@ class PolicyIteration:
         # If n is greater than this value, then the probability of getting n is truncated to 0
         self.poisson_upper_bound = poisson_upper_bound
         self.poisson = {
-            lam: {
-                n: poisson.pmf(n, lam) for n in range(poisson_upper_bound)
-            } for lam in set([AVG_REQUESTS_LOC1, AVG_REQUESTS_LOC2, AVG_RETURNS_LOC1, AVG_RETURNS_LOC2])
+            lam: {n: poisson.pmf(n, lam) for n in range(poisson_upper_bound)}
+            for lam in set(
+                [
+                    AVG_REQUESTS_LOC1,
+                    AVG_REQUESTS_LOC2,
+                    AVG_RETURNS_LOC1,
+                    AVG_RETURNS_LOC2,
+                ]
+            )
         }
 
-    def solve(self):    
+    def solve(self):
         state_values = np.zeros((MAX_CARS + 1, MAX_CARS + 1))
         policy = np.zeros_like(state_values, dtype=int)
         actions = np.arange(-MAX_MOVE, MAX_MOVE + 1)
@@ -46,18 +52,22 @@ class PolicyIteration:
             print(f"Iteration {iters}: PE")
             state_values = self.policy_evaluation(state_values, policy)
             print(f"  Elapsed time: {time.time() - start_time:.2f} secs")
-            
+
             start_time = time.time()
             print(f"Iteration {iters}: PI")
-            policy, policy_changes = self.policy_improvement(state_values, policy, actions)
+            policy, policy_changes = self.policy_improvement(
+                state_values, policy, actions
+            )
             print(f"  Policy changed in {policy_changes} states")
             print(f"  Elapsed time: {time.time() - start_time:.2f} secs")
-        
+
             iters += 1
             if policy_changes == 0:
                 break
 
-        print(f"\nOptimal policy is reached after {iters} iterations in {time.time() - t0:.2f} secs")
+        print(
+            f"\nOptimal policy is reached after {iters} iterations in {time.time() - t0:.2f} secs"
+        )
         self.plot(policy)
         return policy
 
@@ -68,7 +78,9 @@ class PolicyIteration:
         plt.ylim(0, MAX_CARS + 1)
         plt.show()
 
-    def bellman(self, action: int, state_values: np.ndarray, state: np.ndarray) -> float:
+    def bellman(
+        self, action: int, state_values: np.ndarray, state: np.ndarray
+    ) -> float:
         """O(n^4) computation for all possible requests and returns."""
         # cost for moving cars
         r = -MOVE_COST * abs(action)
@@ -99,28 +111,43 @@ class PolicyIteration:
                 num_loc2 -= rentals_loc2
 
                 # probability for current combination of rental requests
-                prob = self.poisson[AVG_REQUESTS_LOC1][req1] * self.poisson[AVG_REQUESTS_LOC2][req2]
+                prob = (
+                    self.poisson[AVG_REQUESTS_LOC1][req1]
+                    * self.poisson[AVG_REQUESTS_LOC2][req2]
+                )
                 for ret1 in range(self.poisson_upper_bound):
                     for ret2 in range(self.poisson_upper_bound):
                         _num_loc1 = min(num_loc1 + ret1, MAX_CARS)
                         _num_loc2 = min(num_loc2 + ret2, MAX_CARS)
                         _prob = prob * (
-                            self.poisson[AVG_RETURNS_LOC1][ret1] * self.poisson[AVG_RETURNS_LOC2][ret2]
+                            self.poisson[AVG_RETURNS_LOC1][ret1]
+                            * self.poisson[AVG_RETURNS_LOC2][ret2]
                         )
-                        r += _prob * (reward + self.gamma * state_values[_num_loc1, _num_loc2])
+                        r += _prob * (
+                            reward + self.gamma * state_values[_num_loc1, _num_loc2]
+                        )
         return r
 
-    def expected_return_pe(self, policy: np.ndarray, state_values: np.ndarray, state: np.ndarray) -> tuple:
+    def expected_return_pe(
+        self, policy: np.ndarray, state_values: np.ndarray, state: np.ndarray
+    ) -> tuple:
         action = policy[state[0], state[1]]
         expected_return = self.bellman(action, state_values, state)
         return expected_return, state[0], state[1]
 
-    def policy_evaluation(self, state_values: np.ndarray, policy: np.ndarray) -> np.ndarray:
+    def policy_evaluation(
+        self, state_values: np.ndarray, policy: np.ndarray
+    ) -> np.ndarray:
         """4.3 Policy Evaluation."""
         while True:
             new_state_values = state_values.copy()
             with mp.Pool(processes=PARALLEL_PROCESSES) as p:
-                all_states = ((i, j) for i, j in product(np.arange(MAX_CARS + 1), np.arange(MAX_CARS + 1)))
+                all_states = (
+                    (i, j)
+                    for i, j in product(
+                        np.arange(MAX_CARS + 1), np.arange(MAX_CARS + 1)
+                    )
+                )
                 cook = partial(self.expected_return_pe, policy, state_values)
                 results = p.map(cook, all_states)
 
@@ -133,23 +160,34 @@ class PolicyIteration:
             if d < self.delta:
                 print("  Values have converged!")
                 break
-                
+
         return state_values
 
-    def expected_return_pi(self, action: int, state_values: np.ndarray, state: np.ndarray) -> tuple:
+    def expected_return_pi(
+        self, action: int, state_values: np.ndarray, state: np.ndarray
+    ) -> tuple:
         if 0 <= action <= state[0] or -state[1] <= action <= 0:
             expected_return = self.bellman(action, state_values, state)
             return expected_return, state[0], state[1], action
         return -float("inf"), state[0], state[1], action
 
-    def policy_improvement(self, state_values: np.ndarray, policy: np.ndarray, actions: np.ndarray) -> tuple:
+    def policy_improvement(
+        self, state_values: np.ndarray, policy: np.ndarray, actions: np.ndarray
+    ) -> tuple:
         """4.3 Policy Improvement."""
         action_idxs = {el: i for i, el in enumerate(actions)}
         new_policy = policy.copy()
-        expected_action_returns = np.zeros((MAX_CARS + 1, MAX_CARS + 1, np.size(actions)))
+        expected_action_returns = np.zeros(
+            (MAX_CARS + 1, MAX_CARS + 1, np.size(actions))
+        )
         for action in actions:
             with mp.Pool(processes=PARALLEL_PROCESSES) as p:
-                all_states = ((i, j) for i, j in product(np.arange(MAX_CARS + 1), np.arange(MAX_CARS + 1)))
+                all_states = (
+                    (i, j)
+                    for i, j in product(
+                        np.arange(MAX_CARS + 1), np.arange(MAX_CARS + 1)
+                    )
+                )
                 cook = partial(self.expected_return_pi, action, state_values)
                 results = p.map(cook, all_states)
 

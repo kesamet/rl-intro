@@ -10,7 +10,7 @@ GOALS = [0, 20]
 PROB_LEFT = 0.5
 ACTION_LEFT = -1
 ACTION_RIGHT = 1
-ACTIONS  = [ACTION_LEFT, ACTION_RIGHT]
+ACTIONS = [ACTION_LEFT, ACTION_RIGHT]
 
 # true state value from bellman equation
 TRUE_VALUES = np.linspace(-1, 1, WORLD_LENGTH)
@@ -36,7 +36,9 @@ def choose_action() -> int:
     return ACTION_RIGHT
 
 
-def temporal_difference(state_values: np.ndarray, n: int, alpha: float, gamma: float = 1.) -> None:
+def temporal_difference(
+    state_values: np.ndarray, n: int, alpha: float, gamma: float = 1.0
+) -> None:
     state = START
 
     # Track states, rewards and time
@@ -58,12 +60,14 @@ def temporal_difference(state_values: np.ndarray, n: int, alpha: float, gamma: f
         # n-step TD update
         tau = t - n + 1
         if tau >= 0:
-            G = sum([
-                gamma ** (i - tau - 1) * rewards[i]
-                for i in range(tau + 1, min(tau + n, T) + 1)
-            ])
+            G = sum(
+                [
+                    gamma ** (i - tau - 1) * rewards[i]
+                    for i in range(tau + 1, min(tau + n, T) + 1)
+                ]
+            )
             if tau + n < T:
-                G += gamma ** n * state_values[states[tau + n]]
+                G += gamma**n * state_values[states[tau + n]]
             state_values[states[tau]] += alpha * (G - state_values[states[tau]])
 
         if tau == T - 1:
@@ -85,7 +89,9 @@ def policy_action(
     return np.random.choice(np.array(ACTIONS)[values_ == np.max(values_)])
 
 
-def sarsa(q_values: np.ndarray, n: int, alpha: float, epsilon: float = 0.1, gamma: float = 1.) -> None:
+def sarsa(
+    q_values: np.ndarray, n: int, alpha: float, epsilon: float = 0.1, gamma: float = 1.0
+) -> None:
     state = START
     action = policy_action(q_values, state, epsilon)
 
@@ -111,13 +117,17 @@ def sarsa(q_values: np.ndarray, n: int, alpha: float, epsilon: float = 0.1, gamm
         # n-step Sarsa update
         tau = t - n + 1
         if tau >= 0:
-            G = sum([
-                gamma ** (i - tau - 1) * rewards[i]
-                for i in range(tau + 1, min(tau + n, T) + 1)
-            ])
+            G = sum(
+                [
+                    gamma ** (i - tau - 1) * rewards[i]
+                    for i in range(tau + 1, min(tau + n, T) + 1)
+                ]
+            )
             if tau + n < T:
-                G += gamma ** n * q_values[states[tau + n], actions[tau + n]]
-            q_values[states[tau], actions[tau]] += alpha * (G - q_values[states[tau], actions[tau]])
+                G += gamma**n * q_values[states[tau + n], actions[tau + n]]
+            q_values[states[tau], actions[tau]] += alpha * (
+                G - q_values[states[tau], actions[tau]]
+            )
 
         if tau == T - 1:
             break
@@ -140,10 +150,12 @@ def figure_7_2():
                 for _ in range(episodes):
                     temporal_difference(state_values, n, alpha)
 
-                    rmse = np.sqrt(np.mean((state_values[1:20] - TRUE_VALUES[1:20]) ** 2))
+                    rmse = np.sqrt(
+                        np.mean((state_values[1:20] - TRUE_VALUES[1:20]) ** 2)
+                    )
                     errors[i, j] += rmse
 
-    errors /= (runs * episodes)
+    errors /= runs * episodes
 
     for i, n in enumerate(ns):
         plt.plot(alphas, errors[i, :], label=f"n = {n}")

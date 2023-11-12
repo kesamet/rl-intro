@@ -15,7 +15,7 @@ GOAL = "terminal"
 def init_q_values() -> dict:
     q_values = {}
     for s, actions in ACTIONS.items():
-        q_values[s] = {a: 0. for a in actions}
+        q_values[s] = {a: 0.0 for a in actions}
     return q_values
 
 
@@ -57,7 +57,7 @@ def step(state: str, action: str) -> Tuple[str, float]:
 
 def q_learning(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, list]:
@@ -101,7 +101,7 @@ def _sum_q(q_values1, q_values2):
 
 def double_q_learning(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, np.ndarray, list]:

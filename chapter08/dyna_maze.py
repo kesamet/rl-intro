@@ -1,4 +1,3 @@
-import heapq
 from collections import defaultdict
 from typing import List, Tuple
 
@@ -19,6 +18,7 @@ GOAL = [0, 8]
 
 OBSTACLES = [[1, 2], [2, 2], [3, 2], [4, 5], [0, 7], [1, 7], [2, 7]]
 
+
 def step(state: list[int], action: np.ndarray) -> Tuple[List[int], float]:
     """Get reward and next state given current state and action."""
     row, col = state
@@ -36,10 +36,9 @@ def step(state: list[int], action: np.ndarray) -> Tuple[List[int], float]:
         new_state = [row, col]
 
     if new_state == GOAL:
-        reward = 1.
+        reward = 1.0
     else:
-        reward = 0.
-
+        reward = 0.0
     return new_state, reward
 
 
@@ -147,33 +146,7 @@ def dyna_q(
 
         state = next_state
         t += 1
-    
     return t
-
-
-def prioritized_sweeping(
-    q_values: np.ndarray,
-    model: Agent,
-    planning_step: int,
-    max_t: float = float("inf"),
-    gamma: float = 0.95,
-    alpha: float = 0.1,
-    epsilon: float = 0.1,
-):
-    t = 0
-    state = START
-    while t <= max_t and state != GOAL:
-        action = policy_action(q_values, state, epsilon)
-        next_state, reward = step(state, action)
-        model.update(state, action, next_state, reward)
-        p = np.abs(
-            reward + gamma * np.max(q_values[next_state[0], next_state[1], :])
-            - q_values[state[0], state[1], action]
-        )
-        if p > theta:
-            pqueue.append((state))
-
-
 
 
 def figure_8_2():
