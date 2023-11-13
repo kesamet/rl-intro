@@ -76,12 +76,13 @@ class WindyGridWorld:
 
         values_ = q_values[state[0], state[1], :]
         return np.random.choice(
-            [i for i, v_ in enumerate(values_) if v_ == np.max(values_)])
+            [i for i, v_ in enumerate(values_) if v_ == np.max(values_)]
+        )
 
     def sarsa(
         self,
         episodes: int,
-        gamma: float = 1.,
+        gamma: float = 1.0,
         alpha: float = 0.5,
         epsilon: float = 0.1,
     ) -> Tuple[np.ndarray, list]:
@@ -102,13 +103,14 @@ class WindyGridWorld:
                     print(f"+ {action} ==> {next_state}")
                 next_action = self.policy_action(q_values, next_state, epsilon)
                 q_values[state[0], state[1], action] += alpha * (
-                    reward + gamma * q_values[next_state[0], next_state[1], next_action]
+                    reward
+                    + gamma * q_values[next_state[0], next_state[1], next_action]
                     - q_values[state[0], state[1], action]
                 )
                 state = next_state
                 action = next_action
                 iters += 1
-            
+
             steps.append(iters)
         return q_values, steps
 
@@ -140,15 +142,20 @@ def draw_optimal_policy(q_values, title=None):
                     val = "R"
 
             row.append(val)
-            tb.add_cell(
-                i, j, width, height, text=val, loc="center", facecolor="white")
-    
+            tb.add_cell(i, j, width, height, text=val, loc="center", facecolor="white")
+
         optimal_policy.append(row)
 
     for j in range(ncols):
         tb.add_cell(
-            nrows, j, width, height/2, text=WIND[j],
-            loc="center", edgecolor=None, facecolor="none",
+            nrows,
+            j,
+            width,
+            height / 2,
+            text=WIND[j],
+            loc="center",
+            edgecolor=None,
+            facecolor="none",
         )
 
     ax.add_table(tb)
@@ -170,19 +177,37 @@ def figure_6_5():
 
 
 def exercise_6_9():
-    world = WindyGridWorld([
-        NORTH, SOUTH, WEST, EAST, NORTHEAST, SOUTHEAST, SOUTHWEST, NORTHWEST])
+    world = WindyGridWorld(
+        [NORTH, SOUTH, WEST, EAST, NORTHEAST, SOUTHEAST, SOUTHWEST, NORTHWEST]
+    )
     _, steps = world.sarsa(160)
 
-    plt.plot(np.add.accumulate(steps), np.arange(1, len(steps) + 1), label="Without stationary")
+    plt.plot(
+        np.add.accumulate(steps),
+        np.arange(1, len(steps) + 1),
+        label="Without stationary",
+    )
     plt.xlabel("Time steps")
     plt.ylabel("Episodes")
 
-    world = WindyGridWorld([
-        NORTH, SOUTH, WEST, EAST, NORTHEAST, SOUTHEAST, SOUTHWEST, NORTHWEST, STATIONARY])
+    world = WindyGridWorld(
+        [
+            NORTH,
+            SOUTH,
+            WEST,
+            EAST,
+            NORTHEAST,
+            SOUTHEAST,
+            SOUTHWEST,
+            NORTHWEST,
+            STATIONARY,
+        ]
+    )
     _, steps = world.sarsa(160)
 
-    plt.plot(np.add.accumulate(steps), np.arange(1, len(steps) + 1), label="With stationary")
+    plt.plot(
+        np.add.accumulate(steps), np.arange(1, len(steps) + 1), label="With stationary"
+    )
     plt.xlabel("Time steps")
     plt.ylabel("Episodes")
     plt.legend()
@@ -190,8 +215,18 @@ def exercise_6_9():
 
 
 def exercise_6_10():
-    world = WindyGridWorld([
-        NORTH, SOUTH, WEST, EAST, NORTHEAST, SOUTHEAST, SOUTHWEST, NORTHWEST, STATIONARY],
+    world = WindyGridWorld(
+        [
+            NORTH,
+            SOUTH,
+            WEST,
+            EAST,
+            NORTHEAST,
+            SOUTHEAST,
+            SOUTHWEST,
+            NORTHWEST,
+            STATIONARY,
+        ],
         randwind=True,
     )
     _, steps = world.sarsa(160)

@@ -15,7 +15,7 @@ GOAL = "terminal"
 def init_q_values() -> dict:
     q_values = {}
     for s, actions in ACTIONS.items():
-        q_values[s] = {a: 0. for a in actions}
+        q_values[s] = {a: 0.0 for a in actions}
     return q_values
 
 
@@ -25,7 +25,7 @@ def get_best_action(values: dict) -> str:
     return np.random.choice(best_actions)
 
 
-def choose_action(
+def policy_action(
     q_values: dict,
     state: str,
     epsilon: float,
@@ -57,7 +57,7 @@ def step(state: str, action: str) -> Tuple[str, float]:
 
 def q_learning(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, list]:
@@ -70,7 +70,7 @@ def q_learning(
 
         left_from_A = 0
         while state != GOAL:
-            action = choose_action(q_values, state, epsilon)
+            action = policy_action(q_values, state, epsilon)
 
             if state == "A" and action == "left":
                 left_from_A += 1
@@ -101,7 +101,7 @@ def _sum_q(q_values1, q_values2):
 
 def double_q_learning(
     episodes: int,
-    gamma: float = 1.,
+    gamma: float = 1.0,
     alpha: float = 0.5,
     epsilon: float = 0.1,
 ) -> Tuple[np.ndarray, np.ndarray, list]:
@@ -116,7 +116,7 @@ def double_q_learning(
         left_from_A = 0
         while state != GOAL:
             q_values_ = _sum_q(q1, q2)
-            action = choose_action(q_values_, state, epsilon)
+            action = policy_action(q_values_, state, epsilon)
 
             if state == "A" and action == "left":
                 left_from_A += 1
